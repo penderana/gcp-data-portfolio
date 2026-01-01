@@ -4,16 +4,14 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'infra/**' # Solo se activa si cambias algo en la carpeta infra
+  workflow_dispatch: # Esto mantiene también el botón manual por si acaso
 
 jobs:
-  terraform:
-    name: "Terraform"
+  terraform_plan:
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
     env:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -25,8 +23,30 @@ jobs:
         run: cd infra && terraform init
 
       - name: Terraform Plan
-        run: cd infra && terraform plan -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+        run: |
+          cd infra
+          terraform plan -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
 
-      # Descomenta las siguientes líneas solo cuando quieras que el apply sea automático
-      # - name: Terraform Apply
-      #   run: cd infra && terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+  terraform_apply:
+    name: "Terraform Apply"
+    needs: terraform_plan # Solo se intenta si el plan sale bien
+    runs-on: ubuntu-latest
+    # AQUÍ ESTÁ EL TRUCO:
+    environment: production # Esto activa la protección de "Required Reviewers" que configuraste
+    env:
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: cd infra && terraform init
+
+      - name: Terraform Apply
+        run: |
+          cd infra
+          terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
