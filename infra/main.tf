@@ -1,8 +1,8 @@
 # 1. Configuración del Proveedor
 provider "google" {
-  project = "gcp-data-portfolio-cll" 
-  region  = "europe-southwest1"
-  zone    = "europe-southwest1-a"
+  project = var.project_id
+  region  = var.region
+  zone    = var.zone
 }
 
 # 2. Red Privada (VPC) - Coste 0

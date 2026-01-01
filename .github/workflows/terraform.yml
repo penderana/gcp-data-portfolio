@@ -1,0 +1,32 @@
+name: "Terraform Cloud Deploy"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**' # Solo se activa si cambias algo en la carpeta infra
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: cd infra && terraform init
+
+      - name: Terraform Plan
+        run: cd infra && terraform plan -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+
+      # Descomenta las siguientes líneas solo cuando quieras que el apply sea automático
+      # - name: Terraform Apply
+      #   run: cd infra && terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
