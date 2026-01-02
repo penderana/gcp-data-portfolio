@@ -1,3 +1,18 @@
+# 0. Configuracion del bucket de state
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 4.0"
+    }
+  }
+
+  backend "gcs" {
+    bucket  = "terraform-state-flights" # El nombre del bucket que acabas de crear
+    prefix  = "terraform/state"
+  }
+  # ------------------
+}
 # 1. Configuración del Proveedor
 provider "google" {
   project = var.project_id
