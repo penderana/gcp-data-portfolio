@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+      # Variables de Terraform inyectadas vía variables de entorno
+      TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_amadeus_client_id: ${{ secrets.AMADEUS_CLIENT_ID }}
+      TF_VAR_amadeus_client_secret: ${{ secrets.AMADEUS_CLIENT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,17 +28,19 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          cd infra
-          terraform plan -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+          cd infra && terraform plan 
 
   terraform_apply:
     name: "Terraform Apply"
     needs: terraform_plan # Solo se intenta si el plan sale bien
     runs-on: ubuntu-latest
-    # AQUÍ ESTÁ EL TRUCO:
+
     environment: production # Esto activa la protección de "Required Reviewers" que configuraste
     env:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+      TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_amadeus_client_id: ${{ secrets.AMADEUS_CLIENT_ID }}
+      TF_VAR_amadeus_client_secret: ${{ secrets.AMADEUS_CLIENT_SECRET }}
     
     steps:
       - name: Checkout
@@ -48,5 +54,4 @@ jobs:
 
       - name: Terraform Apply
         run: |
-          cd infra
-          terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+          cd infra && terraform apply -auto-approve 

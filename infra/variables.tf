@@ -14,3 +14,15 @@ variable "zone" {
   type        = string
   default     = "europe-southwest1-a"
 }
+
+variable "amadeus_client_id" {
+  description = "Client ID de la API de Amadeus"
+  type        = string
+  sensitive   = true # Esto evita que salga en los logs de la consola
+}
+
+variable "amadeus_client_secret" {
+  description = "Client Secret de la API de Amadeus"
+  type        = string
+  sensitive   = true
+}

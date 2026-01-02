@@ -49,3 +49,17 @@ resource "google_compute_instance" "vm_instance" {
   }
 }
 */
+
+# 5. Importacion de modulos para la creacion de tablas en GCP 
+module "bigquery" {
+  source = "./modules/bigquery"
+}
+
+# 6. Importacion de modulos para la creacion de la conexion terraform
+module "flight_ingestion" {
+  source = "./modules/flight_ingestion"
+
+  project_id            = var.project_id
+  amadeus_client_id     = var.amadeus_client_id
+  amadeus_client_secret = var.amadeus_client_secret
+}
