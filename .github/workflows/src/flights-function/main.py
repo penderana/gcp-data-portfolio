@@ -8,7 +8,7 @@ from google.cloud import bigquery
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 AMADEUS_CLIENT_ID = os.environ.get("AMADEUS_CLIENT_ID")
 AMADEUS_CLIENT_SECRET = os.environ.get("AMADEUS_CLIENT_SECRET")
-DATASET_ID = "vaicon_raw_data"
+DATASET_ID = "flights_data"
 TABLE_ID = "flight_offers_raw"
 
 def get_amadeus_token():

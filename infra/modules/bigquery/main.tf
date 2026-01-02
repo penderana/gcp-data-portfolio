@@ -12,7 +12,7 @@ resource "google_bigquery_dataset" "flights" {
 # 2. La Tabla 
 resource "google_bigquery_table" "raw_flight_offers_table" {
   # Referencia dinámica: Usa el ID del dataset que creamos arriba
-  dataset_id = google_bigquery_dataset.vaicon_dataset.dataset_id
+  dataset_id = google_bigquery_dataset.flights.dataset_id
   table_id   = "raw_flight_offers"
 
   # Particionamiento por día (Optimización de costes)

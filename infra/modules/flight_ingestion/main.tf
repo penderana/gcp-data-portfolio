@@ -7,7 +7,7 @@ variable "amadeus_client_secret" {}
 # 1. ALMACENAMIENTO DE CÓDIGO (Con limpieza automática)
 # --------------------------------------------------------------------------------
 resource "google_storage_bucket" "function_bucket" {
-  name                        = "vaicon-func-source-${var.project_id}"
+  name                        = "flights-func-source-${var.project_id}"
   location                    = var.location
   uniform_bucket_level_access = true
 

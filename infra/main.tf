@@ -30,7 +30,7 @@ resource "google_compute_firewall" "allow_ssh" {
 # Solo la activaremos cuando necesitemos desplegar algo real
 
 resource "google_compute_instance" "vm_instance" {
-  name         = "vaicon-server"
+  name         = "flights-server" --CAMBIAR NAME
   machine_type = "n2-standard-2" 
   zone         = "europe-southwest1-a"
 
