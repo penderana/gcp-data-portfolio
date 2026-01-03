@@ -42,15 +42,27 @@ resource "google_storage_bucket_object" "function_zip_object" {
 # --------------------------------------------------------------------------------
 # 3. IDENTIDAD Y SEGURIDAD (Least Privilege)
 # --------------------------------------------------------------------------------
+locals {
+  # Roles necesarios para la Cloud Function
+  cloud_function_roles = [
+    "roles/bigquery.dataEditor",
+    "roles/bigquery.jobUser",
+    "roles/cloudfunctions.invoker",
+  ]
+}
+
 resource "google_service_account" "function_sa" {
   account_id   = "flight-tracker-sa"
   display_name = "Service Account para Flight Tracker"
+  project = var.project_id
 }
 
 # Permiso: Escribir en BigQuery
-resource "google_project_iam_member" "bq_editor" {
+resource "google_project_iam_member" "function_sa_roles" {
+  for_each = toset(local.cloud_function_roles)
+  
   project = var.project_id
-  role    = "roles/bigquery.dataEditor"
+  role    = each.value
   member  = "serviceAccount:${google_service_account.function_sa.email}"
 }
 
