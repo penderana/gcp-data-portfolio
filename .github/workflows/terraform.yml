@@ -102,6 +102,13 @@ jobs:
             infra/.terraform.lock.hcl
           key: ${{ runner.os }}-terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
 
+      - name: 🕵️‍♂️ DEBUG - Mostrar estructura de archivos
+        run: |
+          echo "📍 Estoy en la carpeta:"
+          pwd
+          echo "📂 Listando todo el proyecto (recursivo):"
+          ls -R
+
       - name: Terraform Init
         run: terraform init
 
