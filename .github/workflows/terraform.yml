@@ -54,12 +54,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        id: plan
-        run: |
-          terraform plan -out=tfplan -no-color | tee plan.txt
-          echo "plan_output<<EOF" >> $GITHUB_OUTPUT
-          cat plan.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        run: terraform plan -out=tfplan
 
       - name: Check for Deletions
         run: |
@@ -67,44 +62,16 @@ jobs:
           if [ -s deletions.txt ]; then
             echo "⚠️ Los siguientes recursos serán ELIMINADOS:"
             cat deletions.txt
-            echo "deletions_found=true" >> $GITHUB_ENV
           else
             echo "✅ No hay recursos a eliminar"
-            echo "deletions_found=false" >> $GITHUB_ENV
           fi
 
       - name: Upload Plan
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
-          path: |
-            infra/tfplan
-            infra/plan.txt
+          path: infra/tfplan
           retention-days: 5
-
-      - name: Comment PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const output = `#### Terraform Plan 📖
-            
-            <details><summary>Show Plan</summary>
-            
-            \`\`\`
-            ${{ steps.plan.outputs.plan_output }}
-            \`\`\`
-            
-            </details>
-            
-            **Deletions found:** ${{ env.deletions_found }}`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
 
   terraform_apply:
     name: "Terraform Apply"
@@ -145,37 +112,4 @@ jobs:
           path: infra/
 
       - name: Terraform Apply
-        id: apply
         run: terraform apply -auto-approve tfplan
-
-      - name: Terraform Output
-        run: terraform output -json > outputs.json
-
-      - name: Upload Outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-outputs
-          path: infra/outputs.json
-
-      - name: Notify Success
-        if: success()
-        run: |
-          echo "✅ Deployment exitoso"
-          echo "🔗 Cloud Functions: https://console.cloud.google.com/functions?project=${{ secrets.GCP_PROJECT_ID }}"
-
-      - name: Notify Failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🚨 Terraform Apply falló - ' + new Date().toISOString(),
-              body: `El deployment falló en el commit ${context.sha}
-              
-              **Workflow:** ${context.workflow}
-              **Run:** ${context.runNumber}
-              
-              [Ver logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
-            })
