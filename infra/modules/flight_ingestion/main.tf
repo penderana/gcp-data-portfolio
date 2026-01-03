@@ -29,7 +29,7 @@ data "archive_file" "function_zip" {
   type        = "zip"
   # Ruta relativa: salimos de modules/flight_ingestion/ y vamos a src/flight-function
   source_dir  = "${path.module}/../../../.github/workflows/src/flight-function/"
-  output_path = "${path.module}/function.zip"
+  output_path = "/tmp/function.zip"
 }
 
 resource "google_storage_bucket_object" "function_zip_object" {
