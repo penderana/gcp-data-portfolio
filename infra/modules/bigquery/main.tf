@@ -47,31 +47,37 @@ resource "google_bigquery_table" "raw_flight_offers_table" {
     "mode": "NULLABLE",
     "description": "Aeropuerto de Origen"
   },
+  {
     "name": "departure_date",
     "type": "DATE",
     "mode": "NULLABLE",
     "description": "Fecha (tipo date) de salida"
   },
+  {
     "name": "num_offers",
     "type": "INT64",
     "mode": "NULLABLE",
     "description": "Numero de ofertas"
   },
+  {
     "name": "adults",
     "type": "INT64",
     "mode": "NULLABLE",
     "description": "Numero de adultos"
   },
+  {
     "name": "search_params",
     "type": "JSON",
     "mode": "NULLABLE",
     "description": "parametros"
   },
+  {
     "name": "data_payload",
     "type": "JSON",
     "mode": "NULLABLE",
     "description": "payload de respuesta"
   },
+  {
     "name": "amadeus_env",
     "type": "STRING",
     "mode": "NULLABLE",
