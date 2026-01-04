@@ -27,18 +27,26 @@ resource "google_storage_bucket" "function_bucket" {
 # --------------------------------------------------------------------------------
 data "archive_file" "function_zip" {
   type        = "zip"
-  # Ruta relativa: salimos de modules/flight_ingestion/ y vamos a src/flight-function
   source_dir  = "${path.module}/../../../src/flight-function/"
   output_path = "${path.module}/function.zip"
 }
 
-resource "google_storage_bucket_object" "function_zip_object" {
-  # Usamos el MD5 en el nombre para forzar el despliegue si el código cambia
-  name   = "source-${data.archive_file.function_zip.output_md5}.zip"
-  bucket = google_storage_bucket.function_bucket.name
-  source = data.archive_file.function_zip.output_path
+# Recurso null para forzar que el ZIP se cree
+resource "null_resource" "wait_for_zip" {
+  depends_on = [data.archive_file.function_zip]
+  
+  triggers = {
+    zip_md5 = data.archive_file.function_zip.output_md5
+  }
 }
 
+resource "google_storage_bucket_object" "function_zip_object" {
+  name       = "source-${data.archive_file.function_zip.output_md5}.zip"
+  bucket     = google_storage_bucket.function_bucket.name
+  source     = data.archive_file.function_zip.output_path
+  
+  depends_on = [null_resource.wait_for_zip]  # ← Esperar a que el ZIP exista
+}
 # --------------------------------------------------------------------------------
 # 3. IDENTIDAD Y SEGURIDAD (Least Privilege)
 # --------------------------------------------------------------------------------
