@@ -107,7 +107,7 @@ jobs:
           echo "📍 Estoy en la carpeta:"
           pwd
           echo "📂 Listando todo el proyecto (recursivo):"
-          ls -R /src
+          ls -R /../src
 
       - name: Terraform Init
         run: terraform init
