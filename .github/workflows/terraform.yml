@@ -99,6 +99,14 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Cache Terraform
+        uses: actions/cache@v3
+        with:
+          path: |
+            infra/.terraform
+            infra/.terraform.lock.hcl
+          key: ${{ runner.os }}-terraform-${{ hashFiles('infra/.terraform.lock.hcl') }}
+
       - name: 🕵️‍♂️ DEBUG - Mostrar estructura de archivos
         run: |
           echo "📍 Estoy en la carpeta:"
@@ -109,11 +117,5 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-          path: infra/
-
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve 
