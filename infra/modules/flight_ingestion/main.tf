@@ -168,7 +168,7 @@ resource "google_cloud_scheduler_job" "daily_trigger" {
   description = "Dispara la Cloud Function de vuelos diariamente a las 9 AM"
   schedule    = "0 9 * * *" # Sintaxis Cron: Minuto 0, Hora 9, Todos los días
   time_zone   = "Europe/Madrid"
-  region      = var.location
+  region      = "europe-west1"
 
   http_target {
     http_method = "POST"
