@@ -16,8 +16,8 @@ PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 AMADEUS_CLIENT_ID = os.environ.get("AMADEUS_CLIENT_ID")
 AMADEUS_CLIENT_SECRET = os.environ.get("AMADEUS_CLIENT_SECRET")
 AMADEUS_ENV = os.environ.get("AMADEUS_ENV", "test")  # test o production
-DATASET_ID = os.environ.get("DATASET_ID", "vaicon_raw_data")
-TABLE_ID = os.environ.get("TABLE_ID", "flight_offers_raw")
+DATASET_ID = os.environ.get("DATASET_ID", "flights_data")
+TABLE_ID = os.environ.get("TABLE_ID", "raw_flight_offers")
 MAX_OFFERS = int(os.environ.get("MAX_OFFERS", "10"))
 DAYS_IN_ADVANCE = int(os.environ.get("DAYS_IN_ADVANCE", "30"))
 
