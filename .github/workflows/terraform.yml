@@ -81,6 +81,11 @@ jobs:
     environment: 
       name: production
       url: https://console.cloud.google.com/functions
+    env:  # ← AÑADIR ESTO
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+      TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_amadeus_client_id: ${{ secrets.AMADEUS_CLIENT_ID }}
+      TF_VAR_amadeus_client_secret: ${{ secrets.AMADEUS_CLIENT_SECRET }}
     defaults:
       run:
         working-directory: ./infra
