@@ -65,7 +65,7 @@ resource "google_compute_instance" "vm_instance" {
 }
 */
 
-# 5. Importacion de modulos para la creacion de tablas en GCP 
+# 5. Importacion de modulos para la creacion de tablas y vistas en GCP 
 module "bigquery" {
   source = "./modules/bigquery"
 }
