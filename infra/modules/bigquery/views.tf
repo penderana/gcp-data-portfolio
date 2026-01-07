@@ -1,7 +1,7 @@
 # infra/modules/bigquery/views.tf
 
 resource "google_bigquery_dataset" "silver" {
-  dataset_id    = "flights_data"
+  dataset_id    = "flights_data_silver"
   friendly_name = "Silver Layer - Cleaned Data"
   description   = "Datos limpios y transformados de la capa raw"
   location      = var.location
