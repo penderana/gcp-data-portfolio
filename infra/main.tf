@@ -68,6 +68,9 @@ resource "google_compute_instance" "vm_instance" {
 # 5. Importacion de modulos para la creacion de tablas y vistas en GCP 
 module "bigquery" {
   source = "./modules/bigquery"
+
+  project_id = var.project_id
+  location   = "EU"  
 }
 
 # 6. Importacion de modulos para la creacion de la conexion terraform
