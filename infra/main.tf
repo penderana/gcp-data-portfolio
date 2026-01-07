@@ -70,7 +70,7 @@ module "bigquery" {
   source = "./modules/bigquery"
 
   project_id = var.project_id
-  location   = "EU"  
+  location   = "europe-southwest1"  
 }
 
 # 6. Importacion de modulos para la creacion de la conexion terraform
