@@ -81,3 +81,7 @@ module "flight_ingestion" {
   amadeus_client_id     = var.amadeus_client_id
   amadeus_client_secret = var.amadeus_client_secret
 }
+
+module "streaming" {
+  source = "./modules/streaming"
+}
