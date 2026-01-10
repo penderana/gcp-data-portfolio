@@ -10,7 +10,7 @@ from concurrent.futures import TimeoutError
 # ============================================================================
 # CONFIGURACIÓN
 # ============================================================================
-PROJECT_ID = os.getenv("GCP_PROJECT_ID", "tu-project-id-aqui")
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "gcp-data-portfolio-cll")
 TOPIC_ID = os.getenv("PUBSUB_TOPIC", "transactions-topic")
 SLEEP_INTERVAL = float(os.getenv("SLEEP_INTERVAL", "0.5"))
 PUBLISH_TIMEOUT = 5  # segundos para esperar confirmación
