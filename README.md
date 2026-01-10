@@ -22,7 +22,7 @@ El proyecto sigue una estructura modular separando la infraestructura del códig
 │   └── fraude/    # Proyecto 2
 └── README.md
 
-
+```
 ## ✈️ Proyecto 1: Serverless Data Pipeline & Analytics
 **Tipo:** Batch Processing | **Rol:** Data Engineer | **Estado:** ✅ Completado
 
