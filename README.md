@@ -23,3 +23,17 @@ El proyecto sigue una estructura modular separando la infraestructura del códig
 └── README.md
 
 
+## ✈️ Proyecto 1: Serverless Data Pipeline & Analytics
+**Tipo:** Batch Processing | **Rol:** Data Engineer | **Estado:** ✅ Completado
+
+Este proyecto establece un sistema automatizado (Event-Driven) para la ingesta, procesamiento y análisis de datos de vuelos comerciales. El objetivo era eliminar la gestión manual de servidores y reducir la latencia desde que el dato llega hasta que es visible en el dashboard.
+
+### 🏗️ Arquitectura del Sistema
+La arquitectura sigue un patrón **ELT (Extract, Load, Transform)** totalmente *serverless*, optimizado para costes y escalabilidad automática.
+
+```mermaid
+graph LR
+    A[Datos CSV] -->|Upload| B(Google Cloud Storage)
+    B -->|Trigger Event| C{Cloud Function}
+    C -->|Python Process| D[(BigQuery Warehouse)]
+    D -->|SQL Connect| E[Looker Studio Dashboard]
