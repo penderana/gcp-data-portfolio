@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  TF_VERSION: "1.6.0"
+  TF_VERSION: "1.8.4"
   GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
   TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
   TF_VAR_amadeus_client_id: ${{ secrets.AMADEUS_CLIENT_ID }}
