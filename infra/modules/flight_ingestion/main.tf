@@ -9,6 +9,7 @@ variable "amadeus_client_secret" {}
 resource "google_storage_bucket" "function_bucket" {
   name                        = "flights-func-source-${var.project_id}"
   location                    = var.location
+  force_destroy               = true
   uniform_bucket_level_access = true
 
   # COST OPTIMIZATION: Borrar zips antiguos automáticamente tras 7 días
