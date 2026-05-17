@@ -47,7 +47,7 @@ resource "google_compute_firewall" "allow_ssh" {
 resource "google_compute_instance" "vm_instance" {
   name         = "flights-server" --CAMBIAR NAME
   machine_type = "n2-standard-2" 
-  zone         = "europe-southwest1-a"
+  zone         = "europe-west1-a"
 
   boot_disk {
     initialize_params {
@@ -70,7 +70,7 @@ module "bigquery" {
   source = "./modules/bigquery"
 
   project_id = var.project_id
-  location   = "europe-southwest1"  
+  location   = "europe-west1"  
 }
 
 # 6. Importacion de modulos para la creacion de la conexion terraform

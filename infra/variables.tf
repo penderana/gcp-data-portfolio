@@ -6,13 +6,13 @@ variable "project_id" {
 variable "region" {
   description = "Región de GCP"
   type        = string
-  default     = "europe-southwest1"
+  default     = "europe-west1"
 }
 
 variable "zone" {
   description = "Zona de GCP"
   type        = string
-  default     = "europe-southwest1-a"
+  default     = "europe-west1-a"
 }
 
 variable "amadeus_client_id" {

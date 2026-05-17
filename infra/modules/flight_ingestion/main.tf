@@ -1,5 +1,5 @@
 variable "project_id" {}
-variable "location" { default = "europe-southwest1" }
+variable "location" { default = "europe-west1" }
 variable "amadeus_client_id" {}
 variable "amadeus_client_secret" {}
 

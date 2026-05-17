@@ -3,7 +3,7 @@ resource "google_bigquery_dataset" "flights" {
   dataset_id                  = "flights_data"
   friendly_name               = "Flights Data"
   description                 = "Dataset para almacenar ingestas de APIs externas (Vuelos)"
-  location                    = "EUROPE-SOUTHWEST1" # Madrid
+  location                    = "EUROPE-west1" # Madrid
   
   # Importante para pruebas: permite borrar el dataset aunque tenga tablas dentro
   delete_contents_on_destroy = true 
