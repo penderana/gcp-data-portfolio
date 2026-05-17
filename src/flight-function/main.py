@@ -64,14 +64,14 @@ def get_amadeus_token():
         logger.info("Token obtenido exitosamente")
         return response.json()["access_token"]
     except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 401:
+        if e.response is not None and e.response.status_code == 401:
             logger.error("Error de autenticación: credenciales inválidas")
             raise ValueError("Credenciales de Amadeus inválidas")
-        elif e.response.status_code == 403:
+        elif e.response is not None and e.response.status_code == 403:
             logger.error("Acceso denegado por Amadeus")
             raise ValueError("Acceso denegado a la API de Amadeus")
         else:
-            logger.error(f"Error HTTP al obtener token: {e}")
+            logger.error(f"Error HTTP al obtener token: {str(e)}")
             raise
     except requests.exceptions.Timeout:
         logger.error("Timeout al solicitar token")
@@ -108,6 +108,10 @@ def search_flights(token, origin, destination, departure_date, adults, max_resul
         
         return data
     except requests.exceptions.HTTPError as e:
+        if e.response is None:
+            logger.error(f"Error HTTP sin respuesta de servidor: {str(e)}")
+            raise
+            
         if e.response.status_code == 400:
             logger.error(f"Parámetros de búsqueda inválidos: {e.response.text}")
             raise ValueError(f"Parámetros inválidos: {e.response.text}")
@@ -115,12 +119,11 @@ def search_flights(token, origin, destination, departure_date, adults, max_resul
             logger.warning("No se encontraron vuelos para los criterios especificados")
             return {"data": [], "meta": {"count": 0}}
         elif e.response.status_code == 500:
-            # Capturamos el error 500 para ver el motivo real de Amadeus
             error_msg = e.response.text
             logger.error(f"Error 500 en servidor de Amadeus. Detalle: {error_msg}")
             raise ValueError(f"Amadeus ha fallado internamente. Mensaje del servidor: {error_msg}")
         else:
-            logger.error(f"Error HTTP en búsqueda de vuelos: {e}. Detalle: {e.response.text}")
+            logger.error(f"Error HTTP en búsqueda de vuelos: {str(e)}")
             raise
     except requests.exceptions.Timeout:
         logger.error("Timeout en búsqueda de vuelos")
@@ -134,11 +137,8 @@ def insert_to_bigquery(data, origin, destination, departure_date, search_params)
     try:
         client = bigquery.Client(project=PROJECT_ID)
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        
-        # Extraemos información relevante para columnas dedicadas
         num_offers = len(data.get("data", []))
         
-        # Estructura mejorada del registro
         row = {
             "ingestion_timestamp": timestamp,
             "origin": origin,
@@ -147,7 +147,7 @@ def insert_to_bigquery(data, origin, destination, departure_date, search_params)
             "num_offers": num_offers,
             "adults": search_params.get("adults", 1),
             "search_params": json.dumps(search_params),
-            "data_payload": json.dumps(data),  # ✅ JSON válido
+            "data_payload": json.dumps(data),
             "amadeus_env": AMADEUS_ENV
         }
         
@@ -155,13 +155,78 @@ def insert_to_bigquery(data, origin, destination, departure_date, search_params)
         logger.info(f"Insertando en BigQuery: {table_ref}")
         
         errors = client.insert_rows_json(table_ref, [row])
-        
         if errors:
             logger.error(f"Errores en BigQuery: {errors}")
             raise Exception(f"Error al insertar en BigQuery: {errors}")
         
         logger.info(f"Datos insertados exitosamente en BigQuery ({num_offers} ofertas)")
         return True
-        
     except Exception as e:
         logger.error(f"Error al insertar en BigQuery: {str(e)}")
+        raise
+
+@functions_framework.http
+def ingest_flight_data(request):
+    """Cloud Function principal para ingesta de datos de vuelos."""
+    try:
+        validate_environment()
+        request_json = request.get_json(silent=True) or {}
+        
+        # Ruta por defecto robusta (París a Londres)
+        origin = request.args.get("origin") or request_json.get("origin", "CDG")
+        destination = request.args.get("destination") or request_json.get("destination", "LHR")
+        days_advance = int(request.args.get("days_advance") or request_json.get("days_advance", DAYS_IN_ADVANCE))
+        adults = int(request.args.get("adults") or request_json.get("adults", 1))
+        max_results = int(request.args.get("max_results") or request_json.get("max_results", MAX_OFFERS))
+        
+        if len(origin) != 3 or len(destination) != 3:
+            return {"error": "Los códigos IATA deben tener 3 caracteres"}, 400
+        if adults < 1 or adults > 9:
+            return {"error": "El número de adultos debe estar entre 1 y 9"}, 400
+        if days_advance < 1:
+            return {"error": "days_advance debe ser al menos 1"}, 400
+            
+        departure_date = (datetime.date.today() + datetime.timedelta(days=days_advance)).isoformat()
+        token = get_amadeus_token()
+        
+        search_params = {
+            "origin": origin,
+            "destination": destination,
+            "departure_date": departure_date,
+            "adults": adults,
+            "max_results": max_results
+        }
+        
+        flight_data = search_flights(
+            token=token,
+            origin=origin.upper(),
+            destination=destination.upper(),
+            departure_date=departure_date,
+            adults=adults,
+            max_results=max_results
+        )
+        
+        insert_to_bigquery(flight_data, origin.upper(), destination.upper(), departure_date, search_params)
+        
+        num_offers = len(flight_data.get("data", []))
+        return {
+            "status": "success",
+            "message": "Ingesta completada exitosamente",
+            "details": {
+                "origin": origin.upper(),
+                "destination": destination.upper(),
+                "departure_date": departure_date,
+                "offers_found": num_offers,
+                "amadeus_env": AMADEUS_ENV
+            }
+        }, 200
+        
+    except ValueError as e:
+        logger.error(f"Error de validación: {str(e)}")
+        return {"error": str(e)}, 400
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error de red/API: {str(e)}")
+        return {"error": f"Error al comunicarse con Amadeus: {str(e)}"}, 502
+    except Exception as e:
+        logger.error(f"Error crítico: {str(e)}", exc_info=True)
+        return {"error": f"Error interno: {str(e)}"}, 500
