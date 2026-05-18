@@ -9,8 +9,8 @@ bq_client = bigquery.Client()
 
 # Configuración fija de tu infraestructura en GCP
 PROJECT_ID = "gcp-data-portfolio-cll"
-DATASET_ID = "flights_data_silver"
-TABLE_ID = "raw_flight_offers"  # ✅ Nombre correcto de tu tabla
+DATASET_ID = "flights_data"     # ✅ CORREGIDO: Tu dataset real
+TABLE_ID = "raw_flight_offers"   # ✅ Nombre de tu tabla
 
 @functions_framework.http
 def ingest_flight_data(request):
@@ -49,7 +49,7 @@ def ingest_flight_data(request):
     # 2. VERIFICACIÓN DE CREDENCIALES
     # ==========================================
     # Lee la clave secreta desde las variables de entorno (inyectada de forma segura desde Secret Manager)
-    kiwi_api_key = os.environ.get("KIWI_API_KEY") or os.environ.get("AMADEUS_CLIENT_SECRET")
+    kiwi_api_key = os.environ.get("KIWI_API_KEY")
     
     if not kiwi_api_key:
         print("❌ Error de configuración: Falta la API Key en las variables de entorno.")
@@ -154,6 +154,7 @@ def ingest_flight_data(request):
     # 6. INSERCIÓN EN BIGQUERY
     # ==========================================
     if flights_to_insert:
+        # Construimos la referencia oficial usando puntos (.) tal como requiere la librería
         table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
         print(f"📥 Insertando {len(flights_to_insert)} registros en BigQuery: {table_ref}")
         
@@ -164,13 +165,13 @@ def ingest_flight_data(request):
                 print("✅ Inserción completada con éxito en BigQuery.")
                 return {
                     "status": "success",
-                    "message": f"Se han guardado {len(flights_to_insert)} vuelos correctamente en {TABLE_ID}."
+                    "message": f"Se han guardado {len(flights_to_insert)} vuelos correctamente en {DATASET_ID}.{TABLE_ID}."
                 }, 200
             else:
                 print(f"❌ Error de streaming en BigQuery: {errors}")
                 return {
                     "status": "error",
-                    "message": "Los datos se recibieron de Kiwi pero BigQuery rechazó las filas.",
+                    "message": "Los datos se recibieron de Kiwi pero BigQuery rechazó las filas al validar el esquema.",
                     "motivo_interno": errors
                 }, 500
                 
