@@ -10,7 +10,7 @@ bq_client = bigquery.Client()
 # Configuración fija de tu infraestructura en GCP
 PROJECT_ID = "gcp-data-portfolio-cll"
 DATASET_ID = "flights_data_silver"
-TABLE_ID = "flights_silver"  # ⚠️ Asegúrate de que este es el nombre exacto de tu tabla en BigQuery
+TABLE_ID = "raw_flight_offers"  # ✅ Nombre correcto de tu tabla
 
 @functions_framework.http
 def ingest_flight_data(request):
@@ -48,7 +48,7 @@ def ingest_flight_data(request):
     # ==========================================
     # 2. VERIFICACIÓN DE CREDENCIALES
     # ==========================================
-    # Intenta leer la nueva clave de Kiwi; si no existe, reusa la variable de Amadeus para no romper tu despliegue actual
+    # Lee la clave secreta desde las variables de entorno (inyectada de forma segura desde Secret Manager)
     kiwi_api_key = os.environ.get("KIWI_API_KEY") or os.environ.get("AMADEUS_CLIENT_SECRET")
     
     if not kiwi_api_key:
@@ -94,7 +94,7 @@ def ingest_flight_data(request):
                 error_json = response.json()
                 motivo_interno = error_json.get("message") or error_json.get("error") or error_json
             except Exception:
-                motivo_interno = response.text[:500]  # Si no es JSON, captura el texto bruto truncado
+                motivo_interno = response.text[:500]
 
             print(f"❌ La API de Kiwi devolvió un Error {response.status_code}: {motivo_interno}")
             return {
@@ -157,20 +157,29 @@ def ingest_flight_data(request):
         table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
         print(f"📥 Insertando {len(flights_to_insert)} registros en BigQuery: {table_ref}")
         
-        errors = bq_client.insert_rows_json(table_ref, flights_to_insert)
-        
-        if errors == []:
-            print("✅ Inserción completada con éxito en BigQuery.")
-            return {
-                "status": "success",
-                "message": f"Se han guardado {len(flights_to_insert)} vuelos correctamente."
-            }, 200
-        else:
-            print(f"❌ Error al insertar filas en BigQuery: {errors}")
+        try:
+            errors = bq_client.insert_rows_json(table_ref, flights_to_insert)
+            
+            if errors == []:
+                print("✅ Inserción completada con éxito en BigQuery.")
+                return {
+                    "status": "success",
+                    "message": f"Se han guardado {len(flights_to_insert)} vuelos correctamente en {TABLE_ID}."
+                }, 200
+            else:
+                print(f"❌ Error de streaming en BigQuery: {errors}")
+                return {
+                    "status": "error",
+                    "message": "Los datos se recibieron de Kiwi pero BigQuery rechazó las filas.",
+                    "motivo_interno": errors
+                }, 500
+                
+        except Exception as bq_err:
+            print(f"❌ Error crítico al conectar o insertar en BigQuery: {str(bq_err)}")
             return {
                 "status": "error",
-                "message": "Los datos se recibieron pero falló la inserción en BigQuery.",
-                "motivo_interno": errors
+                "message": "La función colapsó al intentar escribir en BigQuery. Revisa el esquema o permisos.",
+                "motivo_interno": str(bq_err)
             }, 500
     else:
         print("🛈 No se encontró ningún vuelo que coincida con los criterios.")
