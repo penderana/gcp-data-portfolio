@@ -1,4 +1,5 @@
 import os
+import json  # ✅ Añadido para serializar los campos JSON correctamente
 import datetime
 import requests
 import functions_framework
@@ -57,7 +58,7 @@ def ingest_flight_data(request):
     # 3. CÁLCULO DE FECHAS
     # ==========================================
     target_date = datetime.date.today() + datetime.timedelta(days=days_advance)
-    date_str = target_date.strftime("%d/%m/%Y") # Formato para Kiwi
+    date_str = target_date.strftime("%d/%m/%Y")
 
     # ==========================================
     # 4. PETICIÓN HTTP A KIWI TEQUILA
@@ -97,23 +98,25 @@ def ingest_flight_data(request):
     # ==========================================
     # 5. MAPEADO EXACTO AL ESQUEMA DE TU CAPTURA
     # ==========================================
-    # Extraemos cuántas ofertas nos ha devuelto la API
     offers_list = data.get("data", [])
     
-    # Creamos la fila respetando minuciosamente cada columna de tu BigQuery
+    # Preparamos el bloque de metadatos de búsqueda
+    search_metadata = {
+        "days_advance": days_advance,
+        "max_results": max_results,
+        "api_provider": "kiwi_tequila"
+    }
+
+    # Creamos la fila aplicando json.dumps() a las columnas de tipo JSON
     flight_row = {
-        "ingestion_timestamp": datetime.datetime.utcnow().isoformat(),  # TIMESTAMP (Required)
+        "ingestion_timestamp": datetime.datetime.utcnow().isoformat(),  # TIMESTAMP
         "origin": origin,                                              # STRING
         "destination": destination,                                    # STRING
-        "departure_date": target_date.isoformat(),                     # DATE (YYYY-MM-DD)
+        "departure_date": target_date.isoformat(),                     # DATE
         "num_offers": len(offers_list),                                # INTEGER
         "adults": adults,                                              # INTEGER
-        "search_params": {                                             # JSON
-            "days_advance": days_advance,
-            "max_results": max_results,
-            "api_provider": "kiwi_tequila"
-        },
-        "data_payload": data,                                          # JSON (Guardamos toda la respuesta cruda)
+        "search_params": json.dumps(search_metadata),                  # ✅ CORREGIDO: Enviado como String JSON
+        "data_payload": json.dumps(data),                              # ✅ CORREGIDO: Enviado como String JSON
         "amadeus_env": "kiwi_tequila_migration"                         # STRING
     }
 
@@ -123,7 +126,6 @@ def ingest_flight_data(request):
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
     
     try:
-        # insert_rows_json acepta diccionarios nativos de Python para las columnas JSON
         errors = bq_client.insert_rows_json(table_ref, [flight_row])
         
         if errors == []:
